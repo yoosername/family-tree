@@ -1,6 +1,30 @@
 /*Now the CSS*/
 * {margin: 0; padding: 0;}
 
+.btn-circle {
+  width: 40px !important;
+  height: 40px !important;
+  float:right;
+  margin: 20px;
+  text-align: center;
+  padding: 6px 0;
+  font-size: 20px;
+  line-height: 1.428571429;
+  border-radius: 20px;
+}
+
+.btn-circle-sm {
+  width: 20px !important;
+  height: 20px !important;
+  float:right;
+  margin: 10px;
+  text-align: center;
+  padding: 2px;
+  font-size: 10px;
+  line-height: 1.428571429;
+  border-radius: 10px;
+}
+
 .tree {
   align-items: center;
 }
