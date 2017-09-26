@@ -3,27 +3,108 @@ import './Family.css';
 import { Button, Modal, ControlLabel, FormGroup, HelpBlock, FormControl } from 'react-bootstrap';
 import uuidv4 from 'uuid/v4';
 
+/*
+  compare search object to family member on 1 or more keys
+*/
+function memberMatches(member, searchObj) {
+    for(var key in searchObj) {
+        if(searchObj[key] !== member[key]) {
+            return false;
+        }
+    }
+    return true;
+}
+
+// TODO: Clicking on a member should be edit mode for the member
+// TODO: Adding member should create member with default values
+//       and auto enter edit mode
+
 /**
   Start with a single empty root node.
   Each Node can be edited and
   handles ability to add descendents
+  container maintains the tree for persistance purposes
 **/
 class FamilyContainer extends Component {
 
-  render() {
+  constructor(props){
+    super(props);
 
-    var uuid = uuidv4();
+      if( localStorage.getItem('family') != null ){
+        //console.log("from storage",JSON.parse(localStorage.getItem('family')));
+        this.state = {
+          family : JSON.parse(localStorage.getItem('family'))
+        }
+      }else{
+          //console.log("from start");
+        const uuid = uuidv4();
+        this.state = {
+          family: [
+            {
+              key:uuid,
+              firstName:"Adam&Eve",
+              lastName:"(click to add children)",
+              uuid:uuid,
+              parentUUID:0
+            }
+          ]
+        };
+      }
+
+  }
+
+  addFamilyMember = (member) =>{
+    //console.log("adding new family member: ", member);
+    var latest = this.state.family.slice();
+    latest.push(member)
+    this.setState({family:latest});
+    localStorage.setItem('family', JSON.stringify(latest));
+  }
+
+  getFamilyMembersWithUUID = (uuid) => {
+    var filtered = this.state.family.filter(function(member){
+      return (member.uuid === uuid)
+    });
+    return filtered;
+  }
+
+  getDescendantsOfUUID = (uuid) => {
+    var filtered = this.state.family.filter(function(member){
+      //console.log(member.parentUUID, uuid);
+      return (member.parentUUID === uuid)
+    });
+    //console.log(filtered);
+    return filtered;
+  }
+
+  removeFamilyMembers = (member, test) =>{
+    //console.log("removing family members matching: ", member);
+    var orig = this.state.family.slice();
+    var filtered = orig.filter(function(member){
+      return (!memberMatches(member, test))
+    });
+    this.setState({family:filtered});
+    localStorage.setItem('family', JSON.stringify(this.state));
+  }
+
+  render() {
 
     return (
 
           <div className="tree">
             <ul>
-              <FamilyMember
-                      key={uuid}
-                      firstName="Adam&Eve"
-                      lastName="(click to add children)"
-                      uuid={uuid}
-              />
+              {this.getDescendantsOfUUID(0).map(rootNode=>{
+                return <FamilyMember
+                        key={rootNode.uuid}
+                        firstName={rootNode.firstName}
+                        lastName={rootNode.lastName}
+                        uuid={rootNode.uuid}
+                        parentUUID={rootNode.parentUUID}
+                        getDescendantsOfUUID={this.getDescendantsOfUUID}
+                        onAddDescendantAction={this.addFamilyMember}
+                        descendants={this.getDescendantsOfUUID(rootNode.uuid)}
+                />
+              })}
             </ul>
           </div>
 
@@ -41,26 +122,8 @@ class FamilyMember extends Component {
   constructor(props){
     super(props);
     this.state = {
-      firstName:this.props.firstName,
-      lastName:this.props.lastName,
-      uuid:(this.props.uuid)?this.props.uuid:uuidv4(),
-      descendants:(this.props.descendants)?this.props.descendants:[],
       dialogVisible: false
     }
-  }
-
-  addDescendant = (descendant) =>{
-    console.log("adding: ", descendant);
-    var latest = this.state.descendants.slice();
-    latest.push(
-      <FamilyMember
-          key={descendant.uuid}
-          firstName={descendant.firstName}
-          lastName={descendant.lastName}
-          uuid={descendant.uuid}
-      />
-    )
-    this.setState({descendants:latest});
   }
 
   showDialog = () =>{
@@ -71,6 +134,12 @@ class FamilyMember extends Component {
     this.setState({dialogVisible: false});
   }
 
+  addDescendant = (member) => {
+    console.log("adding",member, "to", this.props.uuid)
+    member.parentUUID = this.props.uuid;
+    this.props.onAddDescendantAction(member);
+  }
+
   render() {
     return (
   			<li>
@@ -79,12 +148,14 @@ class FamilyMember extends Component {
             onClick={this.showDialog}
           >
             <div>
-              <p>FirstName: {this.state.firstName}</p>
-              <p>LastName: {this.state.lastName}</p>
+              <p>FirstName: {this.props.firstName}</p>
+              <p>LastName: {this.props.lastName}</p>
             </div>
           </a>
           <FamilyMemberDescendants
-            descendants={this.state.descendants}
+            descendants={this.props.descendants}
+            getDescendantsOfUUID={this.props.getDescendantsOfUUID}
+            onAddDescendantAction={this.props.onAddDescendantAction}
           />
           <AddDescendantDialog
             dialogVisible={this.state.dialogVisible}
@@ -109,7 +180,18 @@ class FamilyMemberDescendants extends Component {
         this.props.descendants.length>0
       )?
       <ul>
-            {this.props.descendants}
+            {this.props.descendants.map(member=>
+              <FamilyMember
+                  key={member.uuid}
+                  firstName={member.firstName}
+                  lastName={member.lastName}
+                  uuid={member.uuid}
+                  parentUUID={member.parentUUID}
+                  getDescendantsOfUUID={this.props.getDescendantsOfUUID}
+                  descendants={this.props.getDescendantsOfUUID(member.uuid)}
+                  onAddDescendantAction={this.props.onAddDescendantAction}
+              />
+            )}
       </ul>
       :null
     );
@@ -137,10 +219,12 @@ class AddDescendantDialog extends Component {
 
   constructor(props){
     super(props);
+    const uuid = uuidv4();
     this.state = {
+      key: uuid,
       firstName: "",
       lastName: "",
-      uuid: uuidv4()
+      uuid: uuid
     };
   }
 
@@ -159,14 +243,18 @@ class AddDescendantDialog extends Component {
   saveAndClose = () => {
     this.props.hideDialog();
     this.props.onSave({
+      "key": this.state.key,
       "firstName" : this.state.firstName,
       "lastName" : this.state.lastName,
       "uuid": this.state.uuid
     })
+    // Reset the panel
+    const uuid = uuidv4();
     this.setState({
+      key: uuid,
       firstName: "",
       lastName: "",
-      uuid: uuidv4()
+      uuid: uuid
     })
   }
 
