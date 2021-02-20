@@ -7,7 +7,7 @@
     "react": "^15.7.0",
     "react-bootstrap": "^0.31.5",
     "react-dom": "^15.7.0",
-    "react-scripts": "1.0.13",
+    "react-scripts": "1.1.5",
     "uuid": "^3.4.0"
   },
   "scripts": {
