@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import './Family.css';
 import { Button, Modal, ControlLabel, FormGroup, HelpBlock, FormControl } from 'react-bootstrap';
 import uuidv4 from 'uuid/v4';
+import FamilyMemberModel from '../models/FamilyMemberModel';
 
 // TODO: Clicking on a member should be edit mode for the member
 // TODO: Adding member should create member with default values
@@ -50,6 +51,10 @@ class FamilyContainer extends Component {
       key: uuid,
       firstName: "",
       lastName: "",
+      dob: "",
+      pob: "",
+      occupation: "",
+      address: "",
       uuid: uuid,
       parentUUID: 0
     }
@@ -194,6 +199,10 @@ class FamilyMember extends Component {
     const member = {
       firstName: "",
       lastName: "",
+      dob: "",
+      pob: "",
+      occupation: "",
+      address: "",
       parentUUID: this.props.member.uuid
     }
     this.props.onAdd(member);
@@ -209,6 +218,10 @@ class FamilyMember extends Component {
             <div>
               <p>FirstName: {this.props.member.firstName}</p>
               <p>LastName: {this.props.member.lastName}</p>
+              <p>DOB: {this.props.member.dob}</p>
+              <p>POB: {this.props.member.pob}</p>
+              <p>Occupation: {this.props.member.occupation}</p>
+              <p>Address: {this.props.member.address}</p>
               <Button onClick={this.addDescendant} bsSize="sm" bsClass="btn btn-primary btn-circle-sm"><i className="glyphicon glyphicon-user"></i></Button>
               <Button onClick={this.remove} bsSize="sm" bsClass="btn btn-danger btn-circle-sm"><i className="glyphicon glyphicon-trash"></i></Button>
             </div>
@@ -287,6 +300,10 @@ class AddDescendantDialog extends Component {
       key: this.props.member.key,
       firstName: this.props.member.firstName,
       lastName: this.props.member.lastName,
+      dob: this.props.member.dob,
+      pob: this.props.member.pob,
+      occupation: this.props.member.occupation,
+      address: this.props.member.address,
       parentUUID: this.props.member.parentUUID,
       uuid: this.props.member.uuid
     };
@@ -300,6 +317,22 @@ class AddDescendantDialog extends Component {
     this.setState({ lastName: e.target.value });
   }
 
+  handleDOBChange = (e) => {
+    this.setState({ dob: e.target.value });
+  }
+
+  handlePOBChange = (e) => {
+    this.setState({ pob: e.target.value });
+  }
+
+  handleOccupationChange = (e) => {
+    this.setState({ occupation: e.target.value });
+  }
+
+  handleAddressChange = (e) => {
+    this.setState({ address: e.target.value });
+  }
+
   close = () => {
     this.props.hideDialog();
   }
@@ -310,6 +343,10 @@ class AddDescendantDialog extends Component {
       "key": this.state.key,
       "firstName" : this.state.firstName,
       "lastName" : this.state.lastName,
+      "dob": this.state.dob,
+      "pob": this.state.pob,
+      "occupation": this.state.occupation,
+      "address": this.state.address,
       "parentUUID" : this.state.parentUUID,
       "uuid": this.state.uuid
     })
@@ -340,6 +377,38 @@ class AddDescendantDialog extends Component {
                 value={this.state.lastName}
                 placeholder="Enter Last Name"
                 onChange={this.handleLastNameChange}
+              />
+              <FieldGroup
+                id="dob"
+                type="text"
+                label="Date of birth"
+                value={this.state.dob}
+                placeholder="Enter Date of birth"
+                onChange={this.handleDOBChange}
+              />
+              <FieldGroup
+                id="pob"
+                type="text"
+                label="Place of birth"
+                value={this.state.pob}
+                placeholder="Enter place of birth"
+                onChange={this.handlePOBChange}
+              />
+              <FieldGroup
+                id="occupation"
+                type="text"
+                label="Occupation"
+                value={this.state.occupation}
+                placeholder="Enter Occupation"
+                onChange={this.handleOccupationChange}
+              />
+              <FieldGroup
+                id="address"
+                type="text"
+                label="Address"
+                value={this.state.address}
+                placeholder="Enter Address"
+                onChange={this.handleAddressChange}
               />
             </form>
           </Modal.Body>
